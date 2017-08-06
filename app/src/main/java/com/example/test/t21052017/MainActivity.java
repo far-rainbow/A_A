@@ -38,7 +38,7 @@ public class MainActivity extends Activity {
     static final double PI_VAL = 3.14159;
     static final double PI_VAL_HALF = 3.14159 / 2;
 
-    static double sRndMix = 0.25;
+    static double sRndMix = 0.5;
 
     private Bitmap[] bmSpriteArray;
 
@@ -196,9 +196,9 @@ public class MainActivity extends Activity {
              */
             if (!bFirstRun && !bSplashOn && !bCalcDone) {
                 canvas.drawBitmap(bmSplashB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper, CANVAS_HEIGHT_HALF, mPaint);
-                canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / 79, CANVAS_HEIGHT / 50, mPaint);
+                canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / BOBS_NUM, CANVAS_HEIGHT / 50, mPaint);
                 mPaint.setTextSize(CANVAS_HEIGHT / 50);
-                canvas.drawText(String.valueOf((iProgressBar * 100 / 79)) + "%", 0, CANVAS_HEIGHT / 25, mPaint);
+                canvas.drawText(String.valueOf((iProgressBar * 100 / BOBS_NUM)) + "%", 0, CANVAS_HEIGHT / 25, mPaint);
             }
 
             /*
