@@ -25,25 +25,25 @@ public class MainActivity extends Activity {
 
     MediaPlayer mPlayer;
 
-    boolean globalPaused = true;
-    boolean firstRun = true;
-    boolean splashOn = false;
-    boolean calcOn = false;
+    boolean bGlobalPaused = true;
+    boolean bFirstRun = true;
+    boolean bSplashOn = false;
+    boolean bCalcDone = false;
 
-    private int textJump = 0;
-    private int pBar = 0;
+    private int iTextWidthHalfHelper = 0;
+    private int iProgressBar = 0;
 
-    private int frameNum = 0;
+    private int iFrameNum = 0;
 
-    static final double piVal = 3.14159;
-    static final double piValHalf = 3.14159 * 0.5;
+    static final double PI_VAL = 3.14159;
+    static final double PI_VAL_HALF = 3.14159 / 2;
 
-    static double rndMix = 0.25;
+    static double sRndMix = 0.25;
 
-    private Bitmap[] bmHrt;
+    private Bitmap[] bmSpriteArray;
 
-    static final String appTitle = "-=A&A=-";
-    static final String appSplash = "NeoCortexLab (L) 2017";
+    static final String TITLE_TEXT = "-=A&A=-";
+    static final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +52,7 @@ public class MainActivity extends Activity {
         MainView = new DrawView(this);
         setContentView(MainView);
 
-        Timer timer;
-
-        globalPaused = false;
+        bGlobalPaused = false;
 
         mPlayer = MediaPlayer.create(this, R.raw.title);
         try {
@@ -65,7 +63,10 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
-        timer = new Timer();
+        /*
+        Force redraw. Most devices done calculations and draw preparations faster than 15 ms. If no than frame shall be droped...
+         */
+        Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -79,27 +80,32 @@ public class MainActivity extends Activity {
         }, 0, 15);
     }
 
+    /*
+    Play music again if app gone foreground
+     */
     @Override
     protected void onResume() {
         super.onResume();
-        globalPaused = false;
-
-        System.out.println("TEST: RESUME...");
+        bGlobalPaused = false;
     }
 
+    /*
+    Stop music while app is paused (gone background in system by phone call or user task switching e.t.c)
+     */
     @Override
     protected void onPause() {
         super.onPause();
-        globalPaused = true;
+        bGlobalPaused = true;
         mPlayer.pause();
-        System.out.println("TEST: PAUSE...");
     }
 
+    /*
+    Main activity view
+     */
     class DrawView extends View {
 
         public DrawView(Context context) {
             super(context);
-
         }
 
         private Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -109,128 +115,140 @@ public class MainActivity extends Activity {
         private Bitmap bmTitleB;
         private Bitmap bmTitleW;
 
+        final double BG_HEIGHT = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getHeight() / 2;
+        final double BG_WIDTH = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getWidth() / 2;
+        final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
+
         @Override
         protected void onDraw(final Canvas canvas) {
             super.onDraw(canvas);
 
-            final int canvasWidth = canvas.getWidth();
-            final int canvasHeight = canvas.getHeight();
-            final int canvasWidthHalf = canvasWidth / 2;
-            final int canvasHeightHalf = canvasHeight / 2;
-            final int canvasHeightHalfAA = canvasHeight / 32;
+            final int CANVAS_WIDTH = canvas.getWidth();
+            final int CANVAS_HEIGHT = canvas.getHeight();
+            final int CANVAS_WIDTH_HALF = CANVAS_WIDTH / 2;
+            final int CANVAS_HEIGHT_HALF = CANVAS_HEIGHT / 2;
+            final int CANVAS_HEIGHT_HALF_AA = CANVAS_HEIGHT / 8;
+            final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 333;
 
-            final int resizePixelSize = canvasWidth / 333;
+            /*
+            I was born in 1979 so 79 sprites are well enough to show love on =)
+             */
+            final int BOBS_NUM = 79;
 
-            int bgWidth;
-            int bgHeight;
+            /*
+            If aspect ratio of BG is equal to canvas aspect ratio then let it be equal. If not then it shall be changed in if {} blocks respectively
+            */
+            int iBgWidth = CANVAS_WIDTH;
+            int iBgHeight = CANVAS_HEIGHT;
 
             /*
             Background calculations at the splash screen stage. Array calculation moved out in separate thread to free main contex runtime and screen refresh invalidation (progress bar and e.t.c)
              */
-            if (splashOn) {
-                splashOn = false;
+            if (bSplashOn) {
+                bSplashOn = false;
 
                 /*
                 Setup main screen BG in respect of viewer screen size
                 */
-                double bgAspectRatio = (double) canvasHeight / (double) canvasWidth;
-                double bgAspectRatioImg = 1280.0 / 960.0;
-                bgWidth = canvasWidth;
-                bgHeight = canvasHeight;
-                if (bgAspectRatio < bgAspectRatioImg) {
-                    bgHeight = (int) (1280.0 * (double) canvasWidth / 960.0);
+                double dBgAspectRatio = (double) CANVAS_HEIGHT / (double) CANVAS_WIDTH;
+
+                if (dBgAspectRatio < BG_ASPECT_RATIO_IMG) {
+                    iBgHeight = (int) (BG_HEIGHT * (CANVAS_WIDTH / BG_WIDTH));
                 }
-                if (bgAspectRatio > bgAspectRatioImg) {
-                    bgWidth = (int) (960.0 * ((double) canvasHeight / 1280.0));
+                if (dBgAspectRatio > BG_ASPECT_RATIO_IMG) {
+                    iBgWidth = (int) (BG_WIDTH * (CANVAS_HEIGHT / BG_HEIGHT));
                 }
-                bmBG = getResizedBitmap(BitmapFactory.decodeResource(this.getResources(), R.drawable.aa), bgWidth, bgHeight);
+                bmBG = getResizedBitmap(BitmapFactory.decodeResource(this.getResources(), R.drawable.aa), iBgWidth, iBgHeight);
 
                 /*
                 Setup thread for calculations of bitmap array of sprites: from smallest one to bigger one. This is not so fast operation.
                  */
-                Thread Splash = new Thread(new Runnable() {
+                Thread ThreadSplash = new Thread(new Runnable() {
                     public void run() {
-                        bmHrt = new Bitmap[79];
+                        bmSpriteArray = new Bitmap[BOBS_NUM];
                         Context Temp = getApplicationContext();
-                        for (int k = 0; k < 79; k++) {
-                            bmHrt[k] = getResizedBitmap(decodeResource(Temp.getResources(), R.drawable.h1), 1 + k * resizePixelSize, 1 + k * resizePixelSize);
-                            pBar = k;
+                        for (int k = 0; k < BOBS_NUM; k++) {
+                            bmSpriteArray[k] = getResizedBitmap(decodeResource(Temp.getResources(), R.drawable.h1), 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE);
+                            iProgressBar = k;
                         }
-                        calcOn = true;
-                        frameNum = 0;
+                        bCalcDone = true;
+                        iFrameNum = 0;
                     }
                 });
-                Splash.start();
+                ThreadSplash.start();
             }
 
             /*
             First run: setup splash and title text bitmaps, draw splash text bitmap, change switches
              */
-            if (firstRun) {
-                bmSplashB = textAsBitmap(appSplash, 32, Color.BLACK);
-                bmTitleB = textAsBitmap(appTitle, 128, Color.BLACK);
-                bmTitleW = textAsBitmap(appTitle, 124, Color.WHITE);
-                textJump = bmSplashB.getWidth() / 2;
-                canvas.drawBitmap(bmSplashB, canvasWidthHalf - textJump, canvasHeightHalf, mPaint);
-                firstRun = false;
-                splashOn = true;
+            if (bFirstRun) {
+                bmSplashB = textAsBitmap(SPLASH_TEXT, 32, Color.BLACK);
+                bmTitleB = textAsBitmap(TITLE_TEXT, 128, Color.BLACK);
+                bmTitleW = textAsBitmap(TITLE_TEXT, 124, Color.WHITE);
+                iTextWidthHalfHelper = bmSplashB.getWidth() / 2;
+                canvas.drawBitmap(bmSplashB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper, CANVAS_HEIGHT_HALF, mPaint);
+                bFirstRun = false;
+                bSplashOn = true;
             }
 
             /*
-            PROGRESS BAR. textJump for bmSplashB was inited previously in firstRun block
+            PROGRESS BAR. iTextWidthHalfHelper for bmSplashB was inited previously in bFirstRun block
              */
-            if (!firstRun && !splashOn && !calcOn) {
-                canvas.drawBitmap(bmSplashB, canvasWidthHalf - textJump, canvasHeightHalf, mPaint);
-                canvas.drawRect(2, 2, (float) pBar * canvasWidth / 79, canvasHeight / 50, mPaint);
-                mPaint.setTextSize(canvasHeight / 50);
-                canvas.drawText(String.valueOf((pBar * 100 / 79)) + "%", 0, canvasHeight / 25, mPaint);
+            if (!bFirstRun && !bSplashOn && !bCalcDone) {
+                canvas.drawBitmap(bmSplashB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper, CANVAS_HEIGHT_HALF, mPaint);
+                canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / 79, CANVAS_HEIGHT / 50, mPaint);
+                mPaint.setTextSize(CANVAS_HEIGHT / 50);
+                canvas.drawText(String.valueOf((iProgressBar * 100 / 79)) + "%", 0, CANVAS_HEIGHT / 25, mPaint);
             }
 
             /*
-            MAIN DRAW ANIMATION: BG, TEXT, SPRITES. textJump must be reinited for each appTitle bitmap text sprites (it has splash text sprite value at this point of runtime)
+            MAIN DRAW ANIMATION: BG, TEXT, SPRITES. iTextWidthHalfHelper must be reinited for each TITLE_TEXT bitmap text sprites (it has splash text sprite value at this point of runtime)
              */
-            if (!firstRun && !splashOn && calcOn) {
+            if (!bFirstRun && !bSplashOn && bCalcDone) {
 
                 canvas.drawBitmap(bmBG, 0, 0, mPaint);
 
-                textJump = bmTitleB.getWidth() / 2;
-                canvas.drawBitmap(bmTitleB, canvasWidthHalf - textJump, canvasHeightHalfAA - 2, mPaint);
-                textJump = bmTitleW.getWidth() / 2;
-                canvas.drawBitmap(bmTitleW, canvasWidthHalf - textJump, canvasHeightHalfAA, mPaint);
-
                 /*
                 Half the last biggest sprite to make sprite pivot a little left from the center of canvas
+                and draw array sprites one by one with position change calculated by formulae
                  */
-                int scrBoundHelper = bmHrt[78].getWidth() / 2;
-                int xH1 = canvasWidthHalf - scrBoundHelper;
-                int yH1 = canvasHeightHalf - scrBoundHelper;
-                int xyMid = (int) ((xH1 + yH1) / piVal);
-                for (int i = 0; i <= 78; i++) {
-                    double j = (double) i / (piVal * rndMix) + frameNum * 0.005; // (/200)
-                    int xH1step = (int) (Math.cos(j) * Math.sin(j * 2.0) * (xyMid * Math.sin((double) frameNum / 220)) * piValHalf);
-                    int yH1step = (int) (Math.sin(j) * Math.cos(j * 0.5) * (xyMid * Math.sin((double) frameNum / 180)) * piValHalf);
-                    canvas.drawBitmap(bmHrt[i], xH1 + xH1step, yH1 + yH1step, mPaint);
+                int iXHelper = CANVAS_WIDTH_HALF - bmSpriteArray[BOBS_NUM - 1].getWidth() / 2;
+                int iYHelper = CANVAS_HEIGHT_HALF - bmSpriteArray[BOBS_NUM - 1].getWidth() / 2;
+                int iSpriteFlowHelper = (int) ((iXHelper + iYHelper) / PI_VAL);
+                for (int i = 0; i < BOBS_NUM; i++) {
+                    double j = (double) i / (PI_VAL * sRndMix) + iFrameNum * 0.005; // (/200)
+                    int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * 2.0) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
+                    int iYSpritePosition = (int) (Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 180)) * PI_VAL_HALF);
+                    canvas.drawBitmap(bmSpriteArray[i], iXHelper + iXSpritePosition, iYHelper + iYSpritePosition, mPaint);
                 }
+
+                /*
+                Draw title text over BG and sprites
+                 */
+                canvas.drawBitmap(bmTitleB, CANVAS_WIDTH_HALF - bmTitleB.getWidth() / 2, CANVAS_HEIGHT_HALF_AA - 2, mPaint);
+                canvas.drawBitmap(bmTitleW, CANVAS_WIDTH_HALF - bmTitleW.getWidth() / 2, CANVAS_HEIGHT_HALF_AA, mPaint);
+
             }
             /*
             Frame count +1
              */
-            frameNum++;
+            iFrameNum++;
 
             /*
             If music is stoped and this is not system pause -- play again! =)
              */
-            if (!mPlayer.isPlaying() && !globalPaused) mPlayer.start();
+            if (!mPlayer.isPlaying() && !bGlobalPaused) mPlayer.start();
         }
     }
 
     /*
     Touch the screen to adjust formaulae params... harcoded randomly =)
+    The fact is that sRndMix goes through this values: 0.5,1.0,2.0,4.0,8.0,16.0 and then loop back to 0.5
      */
     public boolean onTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            rndMix = rndMix + rndMix;
-            if (rndMix > 8.0) rndMix = 0.5;
+            sRndMix = sRndMix + sRndMix;
+            if (sRndMix > 16.0) sRndMix = 0.5;
         }
         return true;
     }
@@ -238,34 +256,34 @@ public class MainActivity extends Activity {
     /*
     Snipet from Stack Overflow: bitmap resize
      */
-    public static Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
+    public static Bitmap getResizedBitmap(Bitmap bm, int iNewWidth, int iNewHeight) {
+        int iWidth = bm.getWidth();
+        int iHeight = bm.getHeight();
+        float fScaleWidth = ((float) iNewWidth) / iWidth;
+        float fScaleHeight = ((float) iNewHeight) / iHeight;
         // CREATE A MATRIX FOR THE MANIPULATION
         Matrix matrix = new Matrix();
         // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
+        matrix.postScale(fScaleWidth, fScaleHeight);
         // "RECREATE" THE NEW BITMAP
         return Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
+                bm, 0, 0, iWidth, iHeight, matrix, false);
     }
 
     /*
     Snipet from Stack Overflow: text to bitmap with size and color
     */
-    public static Bitmap textAsBitmap(String text, float textSize, int textColor) {
+    public static Bitmap textAsBitmap(String StringText, float fTextSize, int iTextColor) {
         Paint paint = new Paint();
-        paint.setTextSize(textSize);
-        paint.setColor(textColor);
+        paint.setTextSize(fTextSize);
+        paint.setColor(iTextColor);
         paint.setTextAlign(Paint.Align.LEFT);
-        float baseline = -paint.ascent(); // ascent() is negative
-        int width = (int) (paint.measureText(text) + 0.5f); // round
-        int height = (int) (baseline + paint.descent() + 0.5f);
-        Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(image);
-        canvas.drawText(text, 0, baseline, paint);
-        return image;
+        float fBaseline = -paint.ascent(); // ascent() is negative
+        int iWidth = (int) (paint.measureText(StringText) + 0.5f); // round
+        int iHeight = (int) (fBaseline + paint.descent() + 0.5f);
+        Bitmap bmImage = Bitmap.createBitmap(iWidth, iHeight, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bmImage);
+        canvas.drawText(StringText, 0, fBaseline, paint);
+        return bmImage;
     }
 }
