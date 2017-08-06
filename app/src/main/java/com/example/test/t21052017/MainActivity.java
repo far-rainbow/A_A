@@ -132,6 +132,7 @@ public class MainActivity extends Activity {
 
             /*
             I was born in 1979 so 79 sprites are well enough to show love on =)
+            ~13 Mb mem allocation at all with current constants and other stuff... so no need to bother
              */
             final int BOBS_NUM = 79;
 
