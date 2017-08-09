@@ -29,6 +29,7 @@ class DrawView extends View {
     static boolean bFirstRun = true;
     static boolean bSplashOn = false;
     static boolean bCalcDone = false;
+
     final String TITLE_TEXT = "-=A&A=-";
     final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
     final String SPLASH_TEXT2 = "79 heart-electrons orbiting all around the corner =)";
@@ -36,42 +37,49 @@ class DrawView extends View {
     final double BG_HEIGHT = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getHeight() / 2;
     final double BG_WIDTH = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getWidth() / 2;
     final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
-    Context CONTEXT;
+
     private Bitmap[] bmSpriteArray;
     private Bitmap bmBG;
     private Bitmap bmSplashTextA;
     private Bitmap bmSplashTextB;
+    private Bitmap bmSplashTextC;
     private Bitmap bmTitleB;
     private Bitmap bmTitleW;
+
     private int iTextWidthHalfHelperA = 0;
-    private int iTextWidthHalfHelperB = 0;
+    private int iTextWidthHalfHelper_B_C = 0;
     private int iProgressBar = 0;
     private int iFrameNum = 0;
-    private Paint mPaint;
 
+    private Paint mPaint;
     {
         mPaint = new Paint();
     }
 
     public DrawView(Context context) {
         super(context);
-        this.CONTEXT = context;
     }
 
     /*
     Snipet from Stack Overflow: text to bitmap with size and color
     */
     public static Bitmap textAsBitmap(String StringText, float fTextSize, int iTextColor) {
+
         Paint paint = new Paint();
         paint.setTextSize(fTextSize);
         paint.setColor(iTextColor);
         paint.setTextAlign(Paint.Align.LEFT);
+
         float fBaseline = -paint.ascent(); // ascent() is negative
+
         int iWidth = (int) (paint.measureText(StringText) + 0.5f); // round
         int iHeight = (int) (fBaseline + paint.descent() + 0.5f);
+
         Bitmap bmImage = Bitmap.createBitmap(iWidth, iHeight, Bitmap.Config.ARGB_8888);
+
         Canvas canvas = new Canvas(bmImage);
         canvas.drawText(StringText, 0, fBaseline, paint);
+
         return bmImage;
     }
 
@@ -136,14 +144,23 @@ class DrawView extends View {
                         iProgressBar = k;
 
                         try {
-                            Thread.sleep(10);
+                            Thread.sleep(20);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
 
                     }
-                    bCalcDone = true;
+
+                    iProgressBar = BOBS_NUM;
+
+                    try {
+                        Thread.sleep(1620);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
                     iFrameNum = 0;
+                    bCalcDone = true;
                 }
             });
             ThreadSplash.start();
@@ -165,7 +182,8 @@ class DrawView extends View {
 
             bmSplashTextA = blurRenderScript(textAsBitmap(SPLASH_TEXT, CANVAS_WIDTH / 16, Color.BLACK), 2);
             bmSplashTextB = blurRenderScript(textAsBitmap(SPLASH_TEXT2, CANVAS_WIDTH / 25, Color.BLACK), 1);
-            iTextWidthHalfHelperB = bmSplashTextB.getWidth() / 2;
+            bmSplashTextC = blurRenderScript(textAsBitmap(SPLASH_TEXT2, CANVAS_WIDTH / 25, Color.WHITE), 1);
+            iTextWidthHalfHelper_B_C = bmSplashTextB.getWidth() / 2;
 
             bFirstRun = false;
             bSplashOn = true;
@@ -177,7 +195,7 @@ class DrawView extends View {
         if (!bFirstRun && !bSplashOn && !bCalcDone) {
 
             canvas.drawBitmap(bmSplashTextA, CANVAS_WIDTH_HALF - iTextWidthHalfHelperA, CANVAS_HEIGHT_HALF, mPaint);
-            canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelperB, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
+            canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
 
             canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / BOBS_NUM, CANVAS_HEIGHT / 50, mPaint);
             mPaint.setTextSize(CANVAS_HEIGHT / 50);
@@ -190,7 +208,8 @@ class DrawView extends View {
         if (!bFirstRun && !bSplashOn && bCalcDone) {
 
             canvas.drawBitmap(bmBG, 0, 0, mPaint);
-            canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelperB, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
+            canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
+            canvas.drawBitmap(bmSplashTextC, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C - 2, CANVAS_HEIGHT - CANVAS_HEIGHT / 25 - 2, mPaint);
 
             /*
             Half the last biggest sprite to make sprite pivot a little left from the center of canvas
