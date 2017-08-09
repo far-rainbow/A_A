@@ -219,20 +219,12 @@ class DrawView extends View {
             int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM - 1].getHeight() / 2);
             double iSpriteFlowHelper = (iXHelper + iYHelper) / PI_VAL;
             for (int i = 0; i < BOBS_NUM; i++) {
+
                 double j = (double) i / (PI_VAL * sRndMix) + iFrameNum * 0.004; // (/200)
+
                 int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * dXSinCf) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
                 int iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 180)) * PI_VAL_HALF) * dBgAspectRatio);
 
-/*                int i_temp = (int)((i - j*2.0));
-
-                //if (i==39) System.out.println(i_temp);
-
-                if (i_temp<1) {
-                    i_temp=1;
-                }
-                if (i_temp>78) {
-                    i_temp=78;
-                }*/
                 canvas.drawBitmap(bmSpriteArray[i], iXHelper + iXSpritePosition, iYHelper + iYSpritePosition, mPaint);
             }
 
