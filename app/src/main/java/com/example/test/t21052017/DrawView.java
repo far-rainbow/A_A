@@ -24,6 +24,10 @@ public final class DrawView extends View {
     static boolean bFirstRun = true;
     static boolean bSplashOn = false;
     static boolean bCalcDone = false;
+    /*
+    I was born in 1979 so 79 sprites are well enough to show love on =)
+    */
+    final int BOBS_NUM = 79;
     final String TITLE_TEXT = "-=A&A=-";
     final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
     final String SPLASH_TEXT2 = "79 heart-electrons on their orbits around thou =)";
@@ -89,11 +93,6 @@ public final class DrawView extends View {
         final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 300;
 
         /*
-        I was born in 1979 so 79 sprites are well enough to show love on =)
-        */
-        final int BOBS_NUM = 79;
-
-        /*
         Default init would be changed while canvas aspect ratio check
         */
         double dBgAspectRatio = 1.33333;
@@ -125,19 +124,31 @@ public final class DrawView extends View {
             bmBG = getResizedBitmap(decodeResource(this.getResources(), R.drawable.aa), iBgWidth, iBgHeight, 2);
 
             /*
-            Setup thread for calculations of bitmap array of sprites: from smallest one to bigger one. This is not so fast operation.
+            SETUP thread for calculations of bitmap array of sprites: from smallest one to bigger one. This is not so fast operation.
             */
-
-            final Bitmap Obraz = decodeResource(this.getResources(), R.drawable.h1);
-
             Thread ThreadSplash = new Thread(new Runnable() {
                 public void run() {
+
                     bmSpriteArray = new Bitmap[BOBS_NUM];
+
+                    /*
+                    Minimal (zero) blur is going on closest and biggest sprite. Deeper by Z the sprite -- deeper blur FX
+                     */
                     int ibLUR = BOBS_NUM;
+
+                    /*
+                    Speedup optimization -- do not repeat decodeResource(this.getResources(), R.drawable.h1) into setup loop! It has the huge resource consuption.
+                    Let us make an object once and use it. BTW i`ve got more than x10 speedup on some devices
+                     */
+                    Bitmap Obraz = decodeResource(getResources(), R.drawable.h1);
+
                     for (int k = 0; k < BOBS_NUM; k++) {
                         bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, (int) (ibLUR-- / 16.0));
                         iProgressBar = k;
 
+                        /*
+                        sleep 20ms in each sprite setup just for fun to show off progress bar and make some very faked busy state (after speedup optimizations it must go on!) =)
+                         */
                         try {
                             Thread.sleep(20);
                         } catch (InterruptedException e) {
@@ -146,16 +157,36 @@ public final class DrawView extends View {
 
                     }
 
+                    /*
+                    progress bar at full length (yeah -- it seems it musta be BOBS_NUM long but no -- we have to div/mul it into paint thread with some value to fit it into canvas dim)
+                     */
                     iProgressBar = BOBS_NUM;
 
+                    /*
+                    sleep 1 second for pause between splash screen and intro
+                     */
                     try {
-                        Thread.sleep(1500);
+                        Thread.sleep(500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
+                    /*
+                    Reset animation frame counter
+                     */
                     iFrameNum = 0;
+
+                    /*
+                    Switch scenario condition
+                     */
                     bCalcDone = true;
+
+                    /*
+                    ??? i dunno -- is there any sense with all this recycling ??? just for fun... ok
+                     */
+                    Obraz.recycle();
+                    bmSplashTextA.recycle();
+
                 }
             });
             ThreadSplash.start();
@@ -178,10 +209,15 @@ public final class DrawView extends View {
             bmSplashTextA = blurRenderScript(textAsBitmap(SPLASH_TEXT, CANVAS_WIDTH / 16, Color.BLACK), 2);
             bmSplashTextB = blurRenderScript(textAsBitmap(SPLASH_TEXT2, CANVAS_WIDTH / 25, Color.BLACK), 1);
             bmSplashTextC = blurRenderScript(textAsBitmap(SPLASH_TEXT2, CANVAS_WIDTH / 25, Color.WHITE), 1);
+
             iTextWidthHalfHelper_B_C = bmSplashTextB.getWidth() / 2;
 
+            /*
+            Switch scenario conditions -- next step is go into SPLASH block and never go here into FIRST RUN block
+             */
             bFirstRun = false;
             bSplashOn = true;
+
         }
 
         /*
@@ -189,10 +225,24 @@ public final class DrawView extends View {
          */
         if (!bFirstRun && !bSplashOn && !bCalcDone) {
 
+            /*
+            NEOCORTEXLAB SPLASH TEXT LOGO
+             */
             canvas.drawBitmap(bmSplashTextA, CANVAS_WIDTH_HALF - iTextWidthHalfHelperA, CANVAS_HEIGHT_HALF, mPaint);
+
+            /*
+            BOTTOM INFO TEXT SPLASH VARIATION
+             */
             canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
 
+            /*
+            PROGRESS BAR WITH DIV/MUL ASPECT RATIO GOT FROM OVERALL SPRITE COUNT (BOBS_NUM)
+             */
             canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / BOBS_NUM - 2, CANVAS_HEIGHT / 50, mPaint);
+
+            /*
+            PERCENTAGE TEXT
+             */
             mPaint.setTextSize(CANVAS_HEIGHT / 50);
             canvas.drawText(String.valueOf((iProgressBar * 100 / BOBS_NUM)) + "%", 0, CANVAS_HEIGHT / 25, mPaint);
         }
@@ -202,7 +252,14 @@ public final class DrawView extends View {
          */
         if (!bFirstRun && !bSplashOn && bCalcDone) {
 
+            /*
+            BACKGROUND
+             */
             canvas.drawBitmap(bmBG, 0, 0, mPaint);
+
+            /*
+            BOTTOM INFO TEXT
+             */
             canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
             canvas.drawBitmap(bmSplashTextC, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C - 2, CANVAS_HEIGHT - CANVAS_HEIGHT / 25 - 2, mPaint);
 
@@ -212,6 +269,7 @@ public final class DrawView extends View {
              */
             int iXHelper = CANVAS_WIDTH_HALF - (bmSpriteArray[BOBS_NUM - 1].getWidth() / 2);
             int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM - 1].getHeight() / 2);
+
             double iSpriteFlowHelper = (iXHelper + iYHelper) / PI_VAL;
 
             for (int i = 0; i < BOBS_NUM; i++) {
@@ -221,14 +279,17 @@ public final class DrawView extends View {
                 int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * MainActivity.dXSinCf) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
                 int iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 180)) * PI_VAL_HALF) * dBgAspectRatio);
 
+                /*
+                Some fun with sprite rotation...
+                 */
                 if (MainActivity.dXSinCf > 4.0) {
                     matrix.reset();
-                    matrix.preRotate(i * (360f / (BOBS_NUM - 1)), CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
+                    matrix.preRotate(i * (360f / (BOBS_NUM - 1)) + iFrameNum % 360, CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
                     canvas.setMatrix(matrix);
                 }
 
-                //canvas.rotate(iFrameNum/100f,CANVAS_WIDTH_HALF,CANVAS_HEIGHT_HALF);
                 canvas.drawBitmap(bmSpriteArray[i], iXHelper + iXSpritePosition, iYHelper + iYSpritePosition, mPaint);
+
             }
 
             /*
@@ -247,7 +308,7 @@ public final class DrawView extends View {
 
         }
         /*
-        Frame count +1
+        Frame count add
          */
         iFrameNum++;
 

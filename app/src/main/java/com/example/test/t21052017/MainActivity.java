@@ -76,14 +76,15 @@ public final class MainActivity extends Activity {
     The fact is that sRndMix goes through this values: 0.5,1.0,2.0,4.0,8.0,16.0 and then loop back to 0.5
      */
     public boolean onTouchEvent(MotionEvent event) {
+
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+
             sRndMix = sRndMix + sRndMix;
             if (sRndMix > 16.0) sRndMix = 0.5;
             dXSinCf = dXSinCf + 1.0;
             if (dXSinCf > 8.0) dXSinCf = 2.0;
+
         }
-        System.out.println(sRndMix);
-        System.out.println(dXSinCf);
         return true;
     }
 }
