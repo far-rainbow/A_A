@@ -9,15 +9,15 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MainActivity extends Activity {
+public final class MainActivity extends Activity {
 
-    static final double PI_VAL = 3.14159;
-    static final double PI_VAL_HALF = 3.14159 / 2;
-    static double sRndMix = 0.5;
-    static double dXSinCf = 1.0;
     static MediaPlayer mPlayer;
     static boolean bGlobalPaused = true;
-    DrawView MainView = null;
+
+    static double sRndMix = 0.5;
+    static double dXSinCf = 1.0;
+
+    DrawView MainView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +31,7 @@ public class MainActivity extends Activity {
         mPlayer = MediaPlayer.create(this, R.raw.title);
         try {
             mPlayer.prepare();
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (IllegalStateException | IOException e) {
             e.printStackTrace();
         }
 

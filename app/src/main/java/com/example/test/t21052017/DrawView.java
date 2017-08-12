@@ -2,7 +2,6 @@ package com.example.test.t21052017;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -14,30 +13,24 @@ import android.renderscript.ScriptIntrinsicBlur;
 import android.view.View;
 
 import static android.graphics.BitmapFactory.decodeResource;
-import static com.example.test.t21052017.MainActivity.PI_VAL;
-import static com.example.test.t21052017.MainActivity.PI_VAL_HALF;
-import static com.example.test.t21052017.MainActivity.bGlobalPaused;
-import static com.example.test.t21052017.MainActivity.dXSinCf;
-import static com.example.test.t21052017.MainActivity.mPlayer;
-import static com.example.test.t21052017.MainActivity.sRndMix;
 
 /*
 Main activity view
 */
-class DrawView extends View {
+public final class DrawView extends View {
 
+    static final double PI_VAL = 3.14159;
+    static final double PI_VAL_HALF = 3.14159 / 2;
     static boolean bFirstRun = true;
     static boolean bSplashOn = false;
     static boolean bCalcDone = false;
-
     final String TITLE_TEXT = "-=A&A=-";
     final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
-    final String SPLASH_TEXT2 = "79 heart-electrons orbiting all around the corner =)";
-
-    final double BG_HEIGHT = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getHeight() / 2;
-    final double BG_WIDTH = (double) BitmapFactory.decodeResource(this.getResources(), R.drawable.aa).getWidth() / 2;
+    final String SPLASH_TEXT2 = "79 heart-electrons on their orbits around thou =)";
+    final double BG_HEIGHT = (double) decodeResource(this.getResources(), R.drawable.aa).getHeight();
+    final double BG_WIDTH = (double) decodeResource(this.getResources(), R.drawable.aa).getWidth();
     final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
-
+    Matrix matrix;
     private Bitmap[] bmSpriteArray;
     private Bitmap bmBG;
     private Bitmap bmSplashTextA;
@@ -45,19 +38,20 @@ class DrawView extends View {
     private Bitmap bmSplashTextC;
     private Bitmap bmTitleB;
     private Bitmap bmTitleW;
-
     private int iTextWidthHalfHelperA = 0;
     private int iTextWidthHalfHelper_B_C = 0;
     private int iProgressBar = 0;
     private int iFrameNum = 0;
-
     private Paint mPaint;
+
     {
         mPaint = new Paint();
     }
 
     public DrawView(Context context) {
+
         super(context);
+        matrix = new Matrix();
     }
 
     /*
@@ -92,7 +86,7 @@ class DrawView extends View {
         final int CANVAS_WIDTH_HALF = CANVAS_WIDTH / 2;
         final int CANVAS_HEIGHT_HALF = CANVAS_HEIGHT / 2;
         final int CANVAS_HEIGHT_HALF_AA = CANVAS_HEIGHT / 16;
-        final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 333;
+        final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 300;
 
         /*
         I was born in 1979 so 79 sprites are well enough to show love on =)
@@ -102,7 +96,7 @@ class DrawView extends View {
         /*
         Default init would be changed while canvas aspect ratio check
         */
-        double dBgAspectRatio = 1.62;
+        double dBgAspectRatio = 1.33333;
 
         /*
         If aspect ratio of BG is equal to canvas aspect ratio then let it be equal. If not then it shall be changed in if {} blocks respectively
@@ -127,7 +121,8 @@ class DrawView extends View {
             if (dBgAspectRatio > BG_ASPECT_RATIO_IMG) {
                 iBgWidth = (int) (BG_WIDTH * (CANVAS_HEIGHT / BG_HEIGHT));
             }
-            bmBG = getResizedBitmap(BitmapFactory.decodeResource(this.getResources(), R.drawable.aa), iBgWidth, iBgHeight, 2);
+
+            bmBG = getResizedBitmap(decodeResource(this.getResources(), R.drawable.aa), iBgWidth, iBgHeight, 2);
 
             /*
             Setup thread for calculations of bitmap array of sprites: from smallest one to bigger one. This is not so fast operation.
@@ -154,7 +149,7 @@ class DrawView extends View {
                     iProgressBar = BOBS_NUM;
 
                     try {
-                        Thread.sleep(1620);
+                        Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -197,7 +192,7 @@ class DrawView extends View {
             canvas.drawBitmap(bmSplashTextA, CANVAS_WIDTH_HALF - iTextWidthHalfHelperA, CANVAS_HEIGHT_HALF, mPaint);
             canvas.drawBitmap(bmSplashTextB, CANVAS_WIDTH_HALF - iTextWidthHalfHelper_B_C, CANVAS_HEIGHT - CANVAS_HEIGHT / 25, mPaint);
 
-            canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / BOBS_NUM, CANVAS_HEIGHT / 50, mPaint);
+            canvas.drawRect(2, 2, (float) iProgressBar * CANVAS_WIDTH / BOBS_NUM - 2, CANVAS_HEIGHT / 50, mPaint);
             mPaint.setTextSize(CANVAS_HEIGHT / 50);
             canvas.drawText(String.valueOf((iProgressBar * 100 / BOBS_NUM)) + "%", 0, CANVAS_HEIGHT / 25, mPaint);
         }
@@ -218,27 +213,37 @@ class DrawView extends View {
             int iXHelper = CANVAS_WIDTH_HALF - (bmSpriteArray[BOBS_NUM - 1].getWidth() / 2);
             int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM - 1].getHeight() / 2);
             double iSpriteFlowHelper = (iXHelper + iYHelper) / PI_VAL;
+
             for (int i = 0; i < BOBS_NUM; i++) {
 
-                double j = (double) i / (PI_VAL * sRndMix) + iFrameNum * 0.004; // (/200)
+                double j = (double) i / (PI_VAL * MainActivity.sRndMix) + iFrameNum * 0.004; // (/200)
 
-                int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * dXSinCf) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
+                int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * MainActivity.dXSinCf) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
                 int iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 180)) * PI_VAL_HALF) * dBgAspectRatio);
 
+                if (MainActivity.dXSinCf > 4.0) {
+                    matrix.reset();
+                    matrix.preRotate(i * (360f / (BOBS_NUM - 1)), CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
+                    canvas.setMatrix(matrix);
+                }
+
+                //canvas.rotate(iFrameNum/100f,CANVAS_WIDTH_HALF,CANVAS_HEIGHT_HALF);
                 canvas.drawBitmap(bmSpriteArray[i], iXHelper + iXSpritePosition, iYHelper + iYSpritePosition, mPaint);
             }
 
             /*
             Draw title text over BG and sprites
              */
+            matrix.reset();
+            canvas.setMatrix(matrix);
             canvas.drawBitmap(bmTitleB, CANVAS_WIDTH_HALF - bmTitleB.getWidth() / 2, CANVAS_HEIGHT_HALF_AA - 2, mPaint);
             canvas.drawBitmap(bmTitleW, CANVAS_WIDTH_HALF - bmTitleW.getWidth() / 2, CANVAS_HEIGHT_HALF_AA, mPaint);
 
-            try {
-                Thread.sleep(4);
+/*            try {
+                Thread.sleep(2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
 
         }
         /*
@@ -249,7 +254,8 @@ class DrawView extends View {
         /*
         If music is stoped and this is not system pause -- play again! =)
          */
-        if (!mPlayer.isPlaying() && !bGlobalPaused) mPlayer.start();
+        if (!MainActivity.mPlayer.isPlaying() && !MainActivity.bGlobalPaused)
+            MainActivity.mPlayer.start();
     }
 
     /*
