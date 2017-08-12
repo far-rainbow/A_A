@@ -270,14 +270,27 @@ public final class DrawView extends View {
             int iXHelper = CANVAS_WIDTH_HALF - (bmSpriteArray[BOBS_NUM - 1].getWidth() / 2);
             int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM - 1].getHeight() / 2);
 
+            /*
+            Speedup opt START
+            */
             double iSpriteFlowHelper = (iXHelper + iYHelper) / PI_VAL;
+            double mathSinA = Math.sin((double) iFrameNum / 220);
+            double mathSinB = Math.sin((double) iFrameNum / 180);
+            int iXSpritePosition;
+            int iYSpritePosition;
+            double j;
+            double iFrameNumDiv200 = iFrameNum * 0.004;
+            double i_div_sRndMix = (PI_VAL * MainActivity.sRndMix);
+            /*
+            Speedup opt END
+             */
 
             for (int i = 0; i < BOBS_NUM; i++) {
 
-                double j = (double) i / (PI_VAL * MainActivity.sRndMix) + iFrameNum * 0.004; // (/200)
+                j = i / i_div_sRndMix + iFrameNumDiv200;
 
-                int iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * MainActivity.dXSinCf) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 220)) * PI_VAL_HALF);
-                int iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * Math.sin((double) iFrameNum / 180)) * PI_VAL_HALF) * dBgAspectRatio);
+                iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * MainActivity.dXSinCf) * (iSpriteFlowHelper * mathSinA) * PI_VAL_HALF);
+                iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * mathSinB) * PI_VAL_HALF) * dBgAspectRatio);
 
                 /*
                 Some fun with sprite rotation...
