@@ -28,6 +28,7 @@ public final class DrawView extends View {
     I was born in 1979 so 79 sprites are well enough to show love on =)
     */
     final int BOBS_NUM = 79;
+    final int BOBS_NUM_M_1 = BOBS_NUM - 1;
     final String TITLE_TEXT = "-=A&A=-";
     final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
     final String SPLASH_TEXT2 = "79 heart-electrons on their orbits around thou =)";
@@ -36,16 +37,19 @@ public final class DrawView extends View {
     final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
     Matrix matrix;
     private Bitmap[] bmSpriteArray;
+
     private Bitmap bmBG;
     private Bitmap bmSplashTextA;
     private Bitmap bmSplashTextB;
     private Bitmap bmSplashTextC;
     private Bitmap bmTitleB;
     private Bitmap bmTitleW;
-    private int iTextWidthHalfHelperA = 0;
-    private int iTextWidthHalfHelper_B_C = 0;
-    private int iProgressBar = 0;
-    private int iFrameNum = 0;
+
+    private int iTextWidthHalfHelperA;
+    private int iTextWidthHalfHelper_B_C;
+    private int iProgressBar;
+    private int iFrameNum;
+
     private Paint mPaint;
 
     {
@@ -163,7 +167,7 @@ public final class DrawView extends View {
                     iProgressBar = BOBS_NUM;
 
                     /*
-                    sleep 1 second for pause between splash screen and intro
+                    sleep 0.5 second for pause between splash screen and intro
                      */
                     try {
                         Thread.sleep(500);
@@ -267,8 +271,8 @@ public final class DrawView extends View {
             Half the last biggest sprite to make sprite pivot a little left from the center of canvas
             and draw array sprites one by one with position change calculated by formulae
              */
-            int iXHelper = CANVAS_WIDTH_HALF - (bmSpriteArray[BOBS_NUM - 1].getWidth() / 2);
-            int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM - 1].getHeight() / 2);
+            int iXHelper = CANVAS_WIDTH_HALF - (bmSpriteArray[BOBS_NUM_M_1].getWidth() / 2);
+            int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM_M_1].getHeight() / 2);
 
             /*
             Speedup opt START
@@ -278,7 +282,7 @@ public final class DrawView extends View {
             double mathSinB = Math.sin((double) iFrameNum / 180);
             int iXSpritePosition;
             int iYSpritePosition;
-            double j;
+            double phi;
             double iFrameNumDiv200 = iFrameNum * 0.004;
             double i_div_sRndMix = (PI_VAL * MainActivity.sRndMix);
             /*
@@ -287,17 +291,17 @@ public final class DrawView extends View {
 
             for (int i = 0; i < BOBS_NUM; i++) {
 
-                j = i / i_div_sRndMix + iFrameNumDiv200;
+                phi = i / i_div_sRndMix + iFrameNumDiv200;
 
-                iXSpritePosition = (int) (Math.cos(j) * Math.sin(j * MainActivity.dXSinCf) * (iSpriteFlowHelper * mathSinA) * PI_VAL_HALF);
-                iYSpritePosition = (int) ((Math.sin(j) * Math.cos(j * 0.5) * (iSpriteFlowHelper * mathSinB) * PI_VAL_HALF) * dBgAspectRatio);
+                iXSpritePosition = (int) (Math.cos(phi) * Math.sin(phi * MainActivity.dXSinCf) * (iSpriteFlowHelper * mathSinA) * PI_VAL_HALF);
+                iYSpritePosition = (int) ((Math.sin(phi) * Math.cos(phi * 0.5) * (iSpriteFlowHelper * mathSinB) * PI_VAL_HALF) * dBgAspectRatio);
 
                 /*
                 Some fun with sprite rotation...
                  */
                 if (MainActivity.dXSinCf > 4.0) {
                     matrix.reset();
-                    matrix.preRotate(i * (360f / (BOBS_NUM - 1)) + iFrameNum % 360, CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
+                    matrix.preRotate(i * (360f / (BOBS_NUM_M_1)) + iFrameNum % 360, CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
                     canvas.setMatrix(matrix);
                 }
 
