@@ -17,7 +17,8 @@ public final class MainActivity extends Activity {
     static double sRndMix = 0.5;
     static double dXSinCf = 1.0;
 
-    DrawView MainView;
+    static DrawView MainView;
+    static Timer timer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +29,7 @@ public final class MainActivity extends Activity {
 
         bGlobalPaused = false;
 
-        mPlayer = MediaPlayer.create(this, R.raw.title);
+        mPlayer = MediaPlayer.create(this, R.raw.title2);
         try {
             mPlayer.prepare();
         } catch (IllegalStateException | IOException e) {
@@ -36,9 +37,9 @@ public final class MainActivity extends Activity {
         }
 
         /*
-        Force redraw. Most devices done calculations and draw preparations faster than 15 ms. If no than frame shall be droped...
+        Redraw timer loop
          */
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -49,7 +50,7 @@ public final class MainActivity extends Activity {
                     }
                 });
             }
-        }, 0, 16);
+        }, 0, 15);
     }
 
     /*
@@ -73,7 +74,8 @@ public final class MainActivity extends Activity {
 
     /*
     Touch the screen to adjust formaulae params... harcoded randomly =)
-    The fact is that sRndMix goes through this values: 0.5,1.0,2.0,4.0,8.0,16.0 and then loop back to 0.5
+    sRndMix goes through this values: 0.5,1.0,2.0,4.0,8.0,16.0 and then loops back to 0.5
+    dXSinCf goes through this values: 1.0,2.0,3.0,...,7.0,8.0 and then loops back to 2.0
      */
     public boolean onTouchEvent(MotionEvent event) {
 
@@ -81,6 +83,7 @@ public final class MainActivity extends Activity {
 
             sRndMix = sRndMix + sRndMix;
             if (sRndMix > 16.0) sRndMix = 0.5;
+
             dXSinCf = dXSinCf + 1.0;
             if (dXSinCf > 8.0) dXSinCf = 2.0;
 

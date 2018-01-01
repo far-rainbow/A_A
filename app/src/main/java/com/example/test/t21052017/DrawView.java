@@ -19,43 +19,66 @@ Main activity view
 */
 public final class DrawView extends View {
 
-    static final double PI_VAL = 3.14159;
-    static final double PI_VAL_HALF = 3.14159 / 2;
+    static final double PI_VAL = 3.14159265358;
+    static final double PI_VAL_HALF = PI_VAL / 2;
     static boolean bFirstRun = true;
     static boolean bSplashOn = false;
     static boolean bCalcDone = false;
+    /*
+    Sprite array. Pre-calcs on the init stage by zooming out reference bitmap and slightly bluring it...
+     */
+    static private Bitmap[] bmSpriteArray;
+    /*
+    Bitmap objects -- background, text strings, e.t.c. Pre-calcs on the init stage.
+     */
+    static private Bitmap bmBG;
+    static private Bitmap bmSplashTextA;
+    static private Bitmap bmSplashTextB;
+    static private Bitmap bmSplashTextC;
+    static private Bitmap bmTitleB;
+    static private Bitmap bmTitleW;
+    /*
+    Speedup opt precalc values for bmSplashTextA and bmSplashTextB,bmSplashTextC -- center point on the x axis (width/2)
+     */
+    static private int iTextWidthHalfHelperA;
+    static private int iTextWidthHalfHelper_B_C;
+    /*
+    Progress bar percentage on the init pre-calc splash screen stage
+     */
+    static private int iProgressBar;
+    /*
+    animation frame number
+     */
+    static private int iFrameNum;
+    /*
+    Paint object to draw some graphics... (drawBitmap,drawText and e.t.c methods)
+     */
+    protected final Paint mPaint;
+    final int sleepMS = 10;
     /*
     I was born in 1979 so 79 sprites are well enough to show love on =)
     */
     final int BOBS_NUM = 79;
     final int BOBS_NUM_M_1 = BOBS_NUM - 1;
-    final String TITLE_TEXT = "-=A&A=-";
+    //final String TITLE_TEXT = "-=A&A=-";
+    final String TITLE_TEXT = "2018";
     final String SPLASH_TEXT = "NeoCortexLab (L) 2017";
-    final String SPLASH_TEXT2 = "79 heart-electrons on their orbits around thou =)";
+    //final String SPLASH_TEXT2 = "79 heart-electrons on their orbits around thou =)";
+    final String SPLASH_TEXT2 = "Happy New Year =)";
+    final String debugString_1 = null;
+    final String debugString_2 = null;
     final double BG_HEIGHT = (double) decodeResource(this.getResources(), R.drawable.aa).getHeight();
     final double BG_WIDTH = (double) decodeResource(this.getResources(), R.drawable.aa).getWidth();
     final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
-    Matrix matrix;
-    private Bitmap[] bmSpriteArray;
-
-    private Bitmap bmBG;
-    private Bitmap bmSplashTextA;
-    private Bitmap bmSplashTextB;
-    private Bitmap bmSplashTextC;
-    private Bitmap bmTitleB;
-    private Bitmap bmTitleW;
-
-    private int iTextWidthHalfHelperA;
-    private int iTextWidthHalfHelper_B_C;
-    private int iProgressBar;
-    private int iFrameNum;
-
-    private Paint mPaint;
+    final Matrix matrix;
 
     {
         mPaint = new Paint();
     }
 
+    /*
+    Class constructor
+     */
     public DrawView(Context context) {
 
         super(context);
@@ -63,9 +86,9 @@ public final class DrawView extends View {
     }
 
     /*
-    Snipet from Stack Overflow: text to bitmap with size and color
+    Snippet from Stack Overflow: text to bitmap with size and color
     */
-    public static Bitmap textAsBitmap(String StringText, float fTextSize, int iTextColor) {
+    private static Bitmap textAsBitmap(String StringText, float fTextSize, int iTextColor) {
 
         Paint paint = new Paint();
         paint.setTextSize(fTextSize);
@@ -89,12 +112,16 @@ public final class DrawView extends View {
     protected void onDraw(final Canvas canvas) {
         super.onDraw(canvas);
 
+        /*
+        Speedup opt precalc values
+         */
         final int CANVAS_WIDTH = canvas.getWidth();
         final int CANVAS_HEIGHT = canvas.getHeight();
+        final int BLUR_FACTOR = 3500000 / (CANVAS_WIDTH * CANVAS_HEIGHT) + 4;
         final int CANVAS_WIDTH_HALF = CANVAS_WIDTH / 2;
         final int CANVAS_HEIGHT_HALF = CANVAS_HEIGHT / 2;
         final int CANVAS_HEIGHT_HALF_AA = CANVAS_HEIGHT / 16;
-        final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 300;
+        final int RESIZE_PIXEL_SIZE = CANVAS_WIDTH / 250 + 1;
 
         /*
         Default init would be changed while canvas aspect ratio check
@@ -125,7 +152,7 @@ public final class DrawView extends View {
                 iBgWidth = (int) (BG_WIDTH * (CANVAS_HEIGHT / BG_HEIGHT));
             }
 
-            bmBG = getResizedBitmap(decodeResource(this.getResources(), R.drawable.aa), iBgWidth, iBgHeight, 2);
+            bmBG = getResizedBitmap(decodeResource(this.getResources(), R.drawable.aa2), iBgWidth, iBgHeight, 2);
 
             /*
             SETUP thread for calculations of bitmap array of sprites: from smallest one to bigger one. This is not so fast operation.
@@ -141,20 +168,21 @@ public final class DrawView extends View {
                     int ibLUR = BOBS_NUM;
 
                     /*
-                    Speedup optimization -- do not repeat decodeResource(this.getResources(), R.drawable.h1) into setup loop! It has the huge resource consuption.
+                    Speedup optimization -- do not repeat decodeResource(this.getResources(), R.drawable.h1) into setup loop! It has a huge resource consumption.
                     Let us make an object once and use it. BTW i`ve got more than x10 speedup on some devices
                      */
-                    Bitmap Obraz = decodeResource(getResources(), R.drawable.h1);
+                    Bitmap Obraz = decodeResource(getResources(), R.drawable.sn);
 
                     for (int k = 0; k < BOBS_NUM; k++) {
-                        bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, (int) (ibLUR-- / 16.0));
+                        bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, ibLUR-- / BLUR_FACTOR);
+                        //bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, 12);
                         iProgressBar = k;
 
                         /*
-                        sleep 20ms in each sprite setup just for fun to show off progress bar and make some very faked busy state (after speedup optimizations it must go on!) =)
+                        sleep sleepMS ms in each sprite setup just for fun to show off progress bar and make some very faked busy state (after speedup optimizations it must go on!) =)
                          */
                         try {
-                            Thread.sleep(20);
+                            Thread.sleep(sleepMS);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -167,10 +195,10 @@ public final class DrawView extends View {
                     iProgressBar = BOBS_NUM;
 
                     /*
-                    sleep 0.5 second for pause between splash screen and intro
+                    sleep 0.62 second for pause between splash screen and intro
                      */
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(1618);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -275,14 +303,24 @@ public final class DrawView extends View {
             int iYHelper = CANVAS_HEIGHT_HALF - (bmSpriteArray[BOBS_NUM_M_1].getHeight() / 2);
 
             /*
-            Speedup opt START
+            Speedup optimisation START
             */
             double iSpriteFlowHelper = (iXHelper + iYHelper) / PI_VAL;
+
+            /*
+            Pre-calc sin for speedup optimisation
+             */
             double mathSinA = Math.sin((double) iFrameNum / 220);
             double mathSinB = Math.sin((double) iFrameNum / 180);
+
             int iXSpritePosition;
             int iYSpritePosition;
+
+            /*
+
+             */
             double phi;
+
             double iFrameNumDiv200 = iFrameNum * 0.004;
             double i_div_sRndMix = (PI_VAL * MainActivity.sRndMix);
             /*
@@ -293,11 +331,14 @@ public final class DrawView extends View {
 
                 phi = i / i_div_sRndMix + iFrameNumDiv200;
 
+                /*
+                Calculate X,Y positions for sprite #i
+                 */
                 iXSpritePosition = (int) (Math.cos(phi) * Math.sin(phi * MainActivity.dXSinCf) * (iSpriteFlowHelper * mathSinA) * PI_VAL_HALF);
                 iYSpritePosition = (int) ((Math.sin(phi) * Math.cos(phi * 0.5) * (iSpriteFlowHelper * mathSinB) * PI_VAL_HALF) * dBgAspectRatio);
 
                 /*
-                Some fun with sprite rotation...
+                Have some fun with sprite rotation...
                  */
                 if (MainActivity.dXSinCf > 4.0) {
                     matrix.reset();
@@ -305,6 +346,9 @@ public final class DrawView extends View {
                     canvas.setMatrix(matrix);
                 }
 
+                /*
+                Draw sprite #i with calculated X,Y position
+                 */
                 canvas.drawBitmap(bmSpriteArray[i], iXHelper + iXSpritePosition, iYHelper + iYSpritePosition, mPaint);
 
             }
@@ -317,11 +361,11 @@ public final class DrawView extends View {
             canvas.drawBitmap(bmTitleB, CANVAS_WIDTH_HALF - bmTitleB.getWidth() / 2, CANVAS_HEIGHT_HALF_AA - 2, mPaint);
             canvas.drawBitmap(bmTitleW, CANVAS_WIDTH_HALF - bmTitleW.getWidth() / 2, CANVAS_HEIGHT_HALF_AA, mPaint);
 
-/*            try {
-                Thread.sleep(2);
+            try {
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }*/
+            }
 
         }
         /*
@@ -348,8 +392,8 @@ public final class DrawView extends View {
         Matrix matrix = new Matrix();
         // RESIZE THE BIT MAP
         matrix.postScale(fScaleWidth, fScaleHeight);
-        // "RECREATE" THE NEW BITMAP
 
+        // "RECREATE" THE NEW BITMAP
         if (iBLUR > 0) {
             return blurRenderScript(Bitmap.createBitmap(bm, 0, 0, iWidth, iHeight, matrix, false), iBLUR);
         } else {
@@ -365,23 +409,32 @@ public final class DrawView extends View {
             e.printStackTrace();
         }
 
-        Bitmap bitmap = Bitmap.createBitmap(
+        Bitmap bitmap = null;
+        //if (smallBitmap.getWidth() > 16) {
+
+        bitmap = Bitmap.createBitmap(
                 smallBitmap.getWidth(), smallBitmap.getHeight(),
                 Bitmap.Config.ARGB_8888);
+        /*} else {
+            bitmap = Bitmap.createBitmap(
+                    16,16,
+                    Bitmap.Config.ARGB_8888);
+        }*/
 
-        RenderScript renderScript = RenderScript.create(this.getContext());
+        RenderScript rs = RenderScript.create(this.getContext());
 
-        Allocation blurInput = Allocation.createFromBitmap(renderScript, smallBitmap);
-        Allocation blurOutput = Allocation.createFromBitmap(renderScript, bitmap);
+        Allocation blurInput = Allocation.createFromBitmap(rs, smallBitmap);
+        //blurInput.
+        Allocation blurOutput = Allocation.createFromBitmap(rs, bitmap);
 
-        ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(renderScript,
-                Element.U8_4(renderScript));
+        ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
+
         blur.setInput(blurInput);
         blur.setRadius(radius); // radius must be 0 < r <= 25
         blur.forEach(blurOutput);
-
         blurOutput.copyTo(bitmap);
-        renderScript.destroy();
+
+        rs.destroy();
 
         return bitmap;
     }

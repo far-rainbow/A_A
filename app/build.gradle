@@ -1,12 +1,20 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion "25.0.3"
+    signingConfigs {
+        config {
+            keyAlias 'key0'
+            keyPassword '123456'
+            storeFile file('C:/Users/test/.android/debug.keystore.2')
+            storePassword '123456'
+        }
+    }
+    compileSdkVersion 26
+    buildToolsVersion "26.0.2"
     defaultConfig {
         applicationId "com.example.test.t21052017"
-        minSdkVersion 16
-        targetSdkVersion 25
+        minSdkVersion 17
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
     }
@@ -19,7 +27,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:support-v4:25.3.1'
 }
