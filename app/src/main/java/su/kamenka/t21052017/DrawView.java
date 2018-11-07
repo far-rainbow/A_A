@@ -14,8 +14,6 @@ import android.view.View;
 
 import static android.graphics.BitmapFactory.decodeResource;
 
-//import su.kamenka.t21052017.R;
-
 /*
 Main activity view
 */
@@ -43,6 +41,7 @@ public final class DrawView extends View {
     static private Bitmap bmTitleW;
     static private Bitmap Obraz;
     static private Bitmap Obraz_2;
+    static private Bitmap Obraz_3;
     /*
     Speedup opt precalc values for bmSplashTextA and bmSplashTextB,bmSplashTextC -- center point on the x axis (width/2)
      */
@@ -73,7 +72,7 @@ public final class DrawView extends View {
     private final double BG_WIDTH = (double) decodeResource(this.getResources(), R.drawable.aa2).getWidth();
     private final double BG_ASPECT_RATIO_IMG = BG_HEIGHT / BG_WIDTH;
     private final Matrix matrix;
-    Bitmap dbg1, dbg2, dbg3, dbg4, dbg5, dbg6, dbg7, dbg8, dbg9;
+    //Bitmap dbg1, dbg2, dbg3, dbg4, dbg5, dbg6, dbg7, dbg8, dbg9,dbgOGLVersion;
     private double minFrameTime = 999999999;
     private double maxFrameTime = 0;
     private int CANVAS_WIDTH;
@@ -130,12 +129,12 @@ public final class DrawView extends View {
         /*
         Speedup opt precalc values
          */
-        CANVAS_WIDTH = canvas.getWidth();
-        System.out.println("GET_WIDTH = " + CANVAS_WIDTH);
-        CANVAS_HEIGHT = canvas.getHeight();
+        //CANVAS_WIDTH = 720;
+        //System.out.println("GET_WIDTH = " + CANVAS_WIDTH);
+        //CANVAS_HEIGHT = 1280;
 
         final int BLUR_FACTOR = 3500000 / (CANVAS_WIDTH * CANVAS_HEIGHT) + 4;
-        System.out.println("BLURFACTOR = " + BLUR_FACTOR);
+        //System.out.println("BLURFACTOR = " + BLUR_FACTOR);
         final int CANVAS_WIDTH_HALF = CANVAS_WIDTH / 2;
         final int CANVAS_HEIGHT_HALF = CANVAS_HEIGHT / 2;
         final int CANVAS_HEIGHT_HALF_AA = CANVAS_HEIGHT / 16;
@@ -170,10 +169,12 @@ public final class DrawView extends View {
                 iBgWidth = (int) (BG_WIDTH * (CANVAS_HEIGHT / BG_HEIGHT));
             }
 
-            dbg1 = textAsBitmap(String.valueOf(dBgAspectRatio), 32, Color.RED);
+/*            dbg1 = textAsBitmap(String.format("CA:%.3f,BGA:%.3f,CH:%d,CW:%d",dBgAspectRatio,BG_ASPECT_RATIO_IMG,CANVAS_HEIGHT,CANVAS_WIDTH), 24, Color.RED);
             dbg2 = textAsBitmap(String.valueOf(iBgHeight) + " / " + String.valueOf(iBgWidth), 32, Color.RED);
             dbg3 = textAsBitmap(String.valueOf(BG_WIDTH), 32, Color.BLACK);
-            dbg4 = textAsBitmap(String.valueOf(BG_HEIGHT), 32, Color.BLACK);
+            dbg4 = textAsBitmap(String.valueOf(BG_HEIGHT), 32, Color.BLACK);*/
+
+/*            dbgOGLVersion = textAsBitmap(String.format("OGL v. = %x",MainActivity.OpenGLVersion), 32, Color.BLACK);*/
 
             bmBG = getResizedBitmap(decodeResource(this.getResources(), R.drawable.aa2), iBgWidth, iBgHeight, 2);
 
@@ -191,8 +192,13 @@ public final class DrawView extends View {
                     int ibLUR = BOBS_NUM;
 
                     for (int k = 0; k < BOBS_NUM; ) {
-                        bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, ibLUR-- / BLUR_FACTOR);
-                        iProgressBar = k++;
+                        if (k%12==0) {
+                            bmSpriteArray[k] = getResizedBitmap(Obraz_3, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, ibLUR-- / BLUR_FACTOR);
+                            iProgressBar = k++;
+                        } else {
+                            bmSpriteArray[k] = getResizedBitmap(Obraz, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, ibLUR-- / BLUR_FACTOR);
+                            iProgressBar = k++;
+                        }
                         if (k < BOBS_NUM_M_1) {
                             bmSpriteArray[k] = getResizedBitmap(Obraz_2, 1 + k * RESIZE_PIXEL_SIZE, 1 + k * RESIZE_PIXEL_SIZE, ibLUR-- / BLUR_FACTOR);
                             iProgressBar = k++;
@@ -238,6 +244,7 @@ public final class DrawView extends View {
                      */
                     Obraz.recycle();
                     Obraz_2.recycle();
+                    Obraz_3.recycle();
                     bmSplashTextA.recycle();
 
                 }
@@ -250,9 +257,9 @@ public final class DrawView extends View {
          */
         if (bFirstRun) {
 
-            dbg7 = textAsBitmap(String.format("min: %.2f", minFrameTime), 32, Color.BLUE);
+/*            dbg7 = textAsBitmap(String.format("min: %.2f", minFrameTime), 32, Color.BLUE);
             dbg8 = textAsBitmap(String.format("min: %.2f", minFrameTime), 32, Color.BLUE);
-            dbg9 = textAsBitmap(String.format("min: %.2f", minFrameTime), 32, Color.BLUE);
+            dbg9 = textAsBitmap(String.format("min: %.2f", minFrameTime), 32, Color.BLUE);*/
 
             bmTitleB = blurRenderScript(textAsBitmap(TITLE_TEXT, CANVAS_WIDTH / 4, Color.BLACK), 16);
             bmTitleW = blurRenderScript(textAsBitmap(TITLE_TEXT, CANVAS_WIDTH / 4 - 4, Color.WHITE), 2);
@@ -275,6 +282,7 @@ public final class DrawView extends View {
                      */
             Obraz = decodeResource(getResources(), R.drawable.sn);
             Obraz_2 = decodeResource(getResources(), R.drawable.sn_viber);
+            Obraz_3 = decodeResource(getResources(), R.drawable.h1small);
 
             /*
             Switch scenario conditions -- next step is go into SPLASH block and never go here into FIRST RUN block
@@ -378,8 +386,9 @@ public final class DrawView extends View {
                 Have some fun with sprite rotation...
                  */
                 if (MainActivity.dXSinCf > 4.0) {
+
                     matrix.reset();
-                    matrix.preRotate(i * (360f / (BOBS_NUM_M_1)) + iFrameNum % 360, CANVAS_WIDTH_HALF, CANVAS_HEIGHT_HALF);
+                    matrix.preRotate((i * (360f / (BOBS_NUM_M_1)) + iFrameNum % 360) * (float)MainActivity.squizze, CANVAS_WIDTH_HALF , CANVAS_HEIGHT_HALF );
                     canvas.setMatrix(matrix);
                 }
 
@@ -398,18 +407,18 @@ public final class DrawView extends View {
             canvas.drawBitmap(bmTitleB, CANVAS_WIDTH_HALF - bmTitleB.getWidth() / 2, CANVAS_HEIGHT_HALF_AA - 2, mPaint);
             canvas.drawBitmap(bmTitleW, CANVAS_WIDTH_HALF - bmTitleW.getWidth() / 2, CANVAS_HEIGHT_HALF_AA, mPaint);
 
-            canvas.drawBitmap(dbg1, 32, 64, mPaint);
+/*            canvas.drawBitmap(dbg1, 32, 64, mPaint);
             canvas.drawBitmap(dbg2, 32, 96, mPaint);
             canvas.drawBitmap(dbg3, 32, 128, mPaint);
-            canvas.drawBitmap(dbg4, 32, 160, mPaint);
+            canvas.drawBitmap(dbg4, 32, 160, mPaint);*/
 
-            dbg5 = textAsBitmap(String.format("%.2f", MainActivity.sRndMix), 32, Color.GREEN);
-            dbg6 = textAsBitmap(String.format("%.2f", MainActivity.dXSinCf), 32, Color.GREEN);
+/*            dbg5 = textAsBitmap(String.format("sRndMix: %.2f / sq: %.2f", MainActivity.sRndMix,MainActivity.squizze), 32, Color.GREEN);
+            dbg6 = textAsBitmap(String.format("dXSinCf: %.2f", MainActivity.dXSinCf), 32, Color.GREEN);
 
             canvas.drawBitmap(dbg5, 32, CANVAS_HEIGHT - 64, mPaint);
-            canvas.drawBitmap(dbg6, 32, CANVAS_HEIGHT - 96, mPaint);
+            canvas.drawBitmap(dbg6, 32, CANVAS_HEIGHT - 96, mPaint);*/
 
-            if (iFrameNum % 50 == 0) {
+/*            if (iFrameNum % 50 == 0) {
 
                 middleFrameTime = System.nanoTime() - timer;
                 dbg7 = textAsBitmap(String.format("mid: %.2f", middleFrameTime / 50), 32, Color.BLACK);
@@ -429,6 +438,8 @@ public final class DrawView extends View {
             canvas.drawBitmap(dbg7, 32, 192, mPaint);
             canvas.drawBitmap(dbg8, 32, 192 + 32, mPaint);
             canvas.drawBitmap(dbg9, 32, 192 + 64, mPaint);
+
+            canvas.drawBitmap(dbgOGLVersion, 32 , 192+96,mPaint);*/
 
             try {
                 Thread.sleep(1);
@@ -509,7 +520,7 @@ public final class DrawView extends View {
         return bitmap;
     }
 
-    private Bitmap RGB565toARGB888(Bitmap img) throws Exception {
+    private Bitmap RGB565toARGB888(Bitmap img) {
         int numPixels = img.getWidth() * img.getHeight();
         int[] pixels = new int[numPixels];
 

@@ -4,6 +4,9 @@ package su.kamenka.t21052017;
 //import com.google.firebase.perf.metrics.Trace;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.ConfigurationInfo;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -32,6 +35,12 @@ public final class MainActivity extends Activity {
     double dXSinCf_next;
     double dXSinCf_threshold;
     Bundle bundle = new Bundle();
+
+    static int OpenGLVersion;
+
+    private double squizze_threshold;
+    static double squizze = 0.0;
+
     //private FirebaseAnalytics mFirebaseAnalytics;
 
     @Override
@@ -56,6 +65,8 @@ public final class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+        OpenGLVersion = detectOpenGL();
+
         /*
         Redraw timer loop
          */
@@ -79,6 +90,9 @@ public final class MainActivity extends Activity {
 
                             if (dXSinCf < dXSinCf_next && !t2) {
                                 dXSinCf = dXSinCf + dXSinCf_threshold;
+
+                                if (squizze<1.0 && dXSinCf > 4.0) squizze = squizze + squizze_threshold;
+
                                 //System.out.println("DXSIN_ADDED =" +dXSinCf);
                             } else {
                                 dXSinCf = dXSinCf_next;
@@ -86,7 +100,7 @@ public final class MainActivity extends Activity {
                                 //System.out.println("DXSIN =" +dXSinCf);
                             }
 
-                            if (t1 && t2 == true) {
+                            if (t1 && t2) {
                                 touched = false;
                             }
 
@@ -139,6 +153,7 @@ public final class MainActivity extends Activity {
                 }
                 if (dXSinCf > 8.0) {
                     dXSinCf = 2.0;
+                    squizze = 0.0;
                 }
 
                 t1 = false;
@@ -148,6 +163,9 @@ public final class MainActivity extends Activity {
                 sRndMix_threshold = sRndMix / 400;
                 dXSinCf_next = dXSinCf + 1.0;
                 dXSinCf_threshold = 1.0 / 400;
+
+                squizze_threshold = 1.0/400;
+
             }
 
             //mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_CONTENT, bundle);
@@ -161,4 +179,12 @@ public final class MainActivity extends Activity {
 
         return true;
     }
+
+    private int detectOpenGL() {
+        ActivityManager am =
+                (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        ConfigurationInfo info = am.getDeviceConfigurationInfo();
+        return info.reqGlEsVersion;
+    }
+
 }
